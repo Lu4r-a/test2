@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chicken Games</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --text-color: #ffffff;
+            --accent-color: #ffcc00;
+            --panel-bg: #1e1e1e;
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f0f0f0;
+            --text-color: #121212;
+            --accent-color: #e6b800;
+            --panel-bg: #ffffff;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            opacity: 0;
+            animation: fadeInPage 1s forwards;
+        }
+
+        @keyframes fadeInPage {
+            to { opacity: 1; }
+        }
+
+        /* Header & Nav */
+        header {
+            padding: 20px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            color: var(--accent-color);
+            margin: 0;
+            font-size: 1.8rem;
+        }
+
+        .settings-btn {
+            background: none;
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .settings-btn:hover {
+            background: var(--accent-color);
+            color: #000;
+        }
+
+        /* Games Container */
+        #games {
+            flex: 1;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Settings Overlay */
+        #settings-panel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        #settings-panel.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .settings-content {
+            background: var(--panel-bg);
+            padding: 30px;
+            border-radius: 15px;
+            width: 300px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .setting-item {
+            margin-bottom: 20px;
+        }
+
+        .setting-item label {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        select, button.close-btn {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #444;
+            background: #333;
+            color: white;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .heart { color: #ff4d4d; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Chicken Games</h1>
+        <button class="settings-btn" onclick="toggleSettings()">Settings</button>
+    </header>
+
+    <div id="games"></div>
+
+    <div id="settings-panel">
+        <div class="settings-content">
+            <h2>Settings</h2>
+            
+            <div class="setting-item">
+                <label>Theme</label>
+                <select id="theme-select" onchange="updateTheme(this.value)">
+                    <option value="dark">Dark Mode</option>
+                    <option value="light">Light Mode</option>
+                </select>
+            </div>
+
+            <div class="setting-item">
+                <label>Automatic Cloaking</label>
+                <select id="cloak-select" onchange="updateCloak(this.value)">
+                    <option value="off">Off</option>
+                    <option value="on">On (About:Blank)</option>
+                </select>
+            </div>
+
+            <button class="close-btn" onclick="toggleSettings()">Save & Close</button>
+        </div>
+    </div>
+
+    <footer>
+        Made with <span class="heart">❤</span> by chickenmonkey278
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/gh/luminsdk/script@latest/lumin.min.js"></script>
+    <script>
+        // Initialize Lumin
+        Lumin.init({
+            container: '#games',
+            theme: 'dark'
+        });
+
+        // Settings Logic
+        const panel = document.getElementById('settings-panel');
+        
+        function toggleSettings() {
+            if (panel.classList.contains('active')) {
+                panel.style.opacity = '0';
+                setTimeout(() => panel.classList.remove('active'), 300);
+            } else {
+                panel.classList.add('active');
+                setTimeout(() => panel.style.opacity = '1', 10);
+            }
+        }
+
+        function updateTheme(theme) {
+            document.body.setAttribute('data-theme', theme);
+            localStorage.setItem('chicken-theme', theme);
+        }
+
+        function updateCloak(status) {
+            localStorage.setItem('chicken-cloak', status);
+        }
+
+        // Load Saved Settings
+        window.onload = () => {
+            const savedTheme = localStorage.getItem('chicken-theme') || 'dark';
+            const savedCloak = localStorage.getItem('chicken-cloak') || 'off';
+
+            // Apply Theme
+            updateTheme(savedTheme);
+            document.getElementById('theme-select').value = savedTheme;
+
+            // Apply Cloak UI
+            document.getElementById('cloak-select').value = savedCloak;
+
+            // Execute About:Blank Cloak if enabled
+            if (savedCloak === 'on' && window.top === window.self) {
+                const url = window.location.href;
+                const win = window.open('about:blank', '_blank');
+                if (win) {
+                    win.document.body.style.margin = '0';
+                    win.document.body.style.height = '100vh';
+                    const iframe = win.document.createElement('iframe');
+                    iframe.style.border = 'none';
+                    iframe.style.width = '100%';
+                    iframe.style.height = '100%';
+                    iframe.src = url;
+                    win.document.body.appendChild(iframe);
+                    window.location.replace('https://google.com');
+                }
+            }
+        };
+    </script>
+</body>
+</html>
