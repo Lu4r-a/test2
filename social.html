@@ -88,56 +88,64 @@
         await sb.from('profiles').update({ last_seen: new Date().toISOString(), status: currentStatus }).eq('id', myId);
     }
 
-    async function loadUsers() {
-        const { data: allUsers } = await sb.from('profiles').select('*');
-        const { data: myFriends } = await sb.from('friends').select('*').or(`user_id.eq.${myId},friend_id.eq.${myId}`);
+   async function loadUsers() {
+    // 1. Get all the data
+    const { data: allUsers } = await sb.from('profiles').select('*');
+    const { data: myFriends } = await sb.from('friends').select('*').or(`user_id.eq.${myId},friend_id.eq.${myId}`);
+    
+    const list = document.getElementById('friends-list');
+    const countDisplay = document.getElementById('online-count');
+    list.innerHTML = "";
+    
+    let onlineTotal = 0;
+    const now = new Date();
+
+    allUsers.forEach(u => {
+        // --- STEP 1: CALCULATE ONLINE STATUS FIRST ---
+        // We do this for EVERYONE, regardless of friend status
+        const lastSeenDate = new Date(u.last_seen);
+        const diffInSeconds = Math.abs((now - lastSeenDate) / 1000);
+        const isRecent = diffInSeconds < 50; // 50 second window
+
+        if (isRecent) onlineTotal++;
+        if (u.id === myId) return; // Don't show yourself in the list
+
+        // --- STEP 2: FIGURE OUT DOT COLOR ---
+        let dotClass = isRecent ? (u.status === 'idle' ? 'idle-dot' : 'online-dot') : 'offline-dot';
+        let statusLabel = isRecent ? (u.status === 'idle' ? 'Idle' : 'Online') : 'Offline';
+
+        // --- STEP 3: FIGURE OUT FRIEND BUTTON ---
+        const friendsList = myFriends || [];
+        const friendship = friendsList.find(f => f.user_id === u.id || f.friend_id === u.id);
+        const isAccepted = friendship && friendship.status === 'accepted';
+        const isPending = friendship && friendship.status === 'pending';
+
+        let actionButton = `<button class="btn" onclick="sendFriendRequest('${u.id}')">Add Friend</button>`;
         
-        const list = document.getElementById('friends-list');
-        const countDisplay = document.getElementById('online-count');
-        list.innerHTML = "";
-        
-        let onlineTotal = 0;
-        const now = new Date();
-
-        allUsers.forEach(u => {
-            // FIX: Independent Time Check (Doesn't care about friend status)
-            const lastSeenDate = new Date(u.last_seen);
-            const diffInSeconds = Math.abs((now - lastSeenDate) / 1000);
-            const isRecent = diffInSeconds < 40; 
-            
-            if (isRecent) onlineTotal++;
-            if (u.id === myId) return;
-
-            const friendsList = myFriends || [];
-            const friendship = friendsList.find(f => f.user_id === u.id || f.friend_id === u.id);
-            const isAccepted = friendship && friendship.status === 'accepted';
-            const isPending = friendship && friendship.status === 'pending';
-
-            let dotClass = isRecent ? (u.status === 'idle' ? 'idle-dot' : 'online-dot') : 'offline-dot';
-            let statusLabel = isRecent ? (u.status === 'idle' ? 'Idle' : 'Online') : 'Offline';
-
-            let actionButton = `<button class="btn" onclick="sendFriendRequest('${u.id}')">Add Friend</button>`;
-            if (isAccepted) {
-                actionButton = `<button class="btn" onclick="startChat('${u.id}', '${u.username}')">Chat</button>`;
-            } else if (isPending) {
-                actionButton = friendship.friend_id === myId ? 
-                    `<button class="btn" onclick="acceptFriend('${friendship.id}')">Accept</button>` : 
-                    `<span style="color:gray; font-size:12px;">Pending</span>`;
+        if (isAccepted) {
+            actionButton = `<button class="btn" onclick="startChat('${u.id}', '${u.username}')">Chat</button>`;
+        } else if (isPending) {
+            if (friendship.friend_id === myId) {
+                actionButton = `<button class="btn" onclick="acceptFriend('${friendship.id}')" style="background:white; color:black;">Accept</button>`;
+            } else {
+                actionButton = `<span style="color:gray; font-size:12px; border:1px solid #444; padding:5px; border-radius:5px;">Pending...</span>`;
             }
+        }
 
-            list.innerHTML += `
-                <div class="user-row">
-                    <span>
-                        <span class="dot ${dotClass}"></span>
-                        <strong>${u.username}</strong>
-                        <span class="status-text">${statusLabel}</span>
-                    </span>
-                    ${actionButton}
-                </div>`;
-        });
+        // --- STEP 4: DRAW THE ROW ---
+        list.innerHTML += `
+            <div class="user-row">
+                <span>
+                    <span class="dot ${dotClass}"></span>
+                    <strong>${u.username}</strong>
+                    <span class="status-text">${statusLabel}</span>
+                </span>
+                ${actionButton}
+            </div>`;
+    });
 
-        if(countDisplay) countDisplay.innerText = onlineTotal;
-    }
+    if(countDisplay) countDisplay.innerText = onlineTotal;
+}
 
     async function sendFriendRequest(targetId) {
         await sb.from('friends').insert([{ user_id: myId, friend_id: targetId, status: 'pending' }]);
