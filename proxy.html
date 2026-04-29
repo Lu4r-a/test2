@@ -13,31 +13,11 @@
     </style>
 </head>
 <body>
-
-    <div class="proxy-container">
-        <h1 style="color: #ffcc00;">Web Proxy</h1>
-        <p>Enter a URL to browse freely:</p>
-        
-        <input type="text" id="proxy-url" placeholder="https://google.com">
-        <br>
-        <button class="btn" onclick="launchProxy()">Launch Proxy</button>
-        
-        <p class="warning">Note: Full proxies require a backend server like Ultraviolet or Womginx.</p>
-        <br>
-        <a href="index.html" style="color: #bbb; text-decoration: none;">← Back to Games</a>
-    </div>
-
-    <script>
-        function launchProxy() {
-            const url = document.getElementById('proxy-url').value;
-            if (!url) return alert("Please enter a URL");
-            
-            // This is where you'd link to your hosted proxy instance
-            // For example, if you deploy a proxy to Replit or Heroku:
-            // window.location.href = "https://your-proxy-server.com/main/" + url;
-            
-            alert("To make this work, you need to host a proxy server (like Ultraviolet) on a platform like Replit or a VPS!");
-        }
-    </script>
+    <header>
+        <a href="index.html" class="btn">← Back</a>
+        <h2 style="margin:0; color:#ffcc00;">Chicken Web Surf</h2>
+    </header>
+    
+    <iframe src="https://www.croxyproxy.com/" style="flex:1; border:none; width:100%;"></iframe>
 </body>
 </html>
