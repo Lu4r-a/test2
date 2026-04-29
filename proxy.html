@@ -5,19 +5,70 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chicken Proxy</title>
     <style>
-        body { background-color: #121212; color: white; font-family: sans-serif; text-align: center; padding: 50px; }
-        .proxy-container { max-width: 600px; margin: 0 auto; background: #1e1e1e; padding: 30px; border-radius: 15px; border: 2px solid #ffcc00; }
-        input { width: 80%; padding: 12px; border-radius: 5px; border: none; margin-bottom: 20px; font-size: 16px; }
-        .btn { background: #ffcc00; color: black; padding: 12px 25px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; text-decoration: none; }
-        .warning { color: #ff4d4d; font-size: 12px; margin-top: 20px; }
+        body { margin: 0; background: #121212; color: white; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        header { padding: 15px 25px; background: #1e1e1e; display: flex; gap: 15px; align-items: center; border-bottom: 2px solid #ffcc00; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        input { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #333; color: white; font-size: 16px; outline: none; transition: 0.3s; }
+        input:focus { border-color: #ffcc00; box-shadow: 0 0 8px #ffcc00; }
+        .btn { background: #ffcc00; color: black; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; text-decoration: none; transition: 0.2s; }
+        .btn:hover { background: #e6b800; transform: scale(1.05); }
+        #proxy-frame { flex: 1; border: none; width: 100%; background: white; }
+        .status-bar { background: #1e1e1e; padding: 5px 20px; font-size: 12px; color: #888; border-top: 1px solid #333; }
     </style>
 </head>
 <body>
+
     <header>
         <a href="index.html" class="btn">← Back</a>
-        <h2 style="margin:0; color:#ffcc00;">Chicken Web Surf</h2>
+        <input type="text" id="url-input" placeholder="Enter URL or search Google...">
+        <button class="btn" onclick="launch()">Launch</button>
     </header>
-    
-    <iframe src="https://www.croxyproxy.com/" style="flex:1; border:none; width:100%;"></iframe>
+
+    <iframe id="proxy-frame" src="about:blank"></iframe>
+
+    <div class="status-bar">
+        Status: <span id="proxy-status" style="color: #00ff00;">Ready</span> | Powered by Ultraviolet Engine
+    </div>
+
+    <script>
+        // We use a public Ultraviolet instance that is currently active
+        const PROXY_BASE = "https://p.psidown.gq/main/"; 
+
+        function launch() {
+            let input = document.getElementById('url-input').value.trim();
+            if (!input) return;
+
+            document.getElementById('proxy-status').innerText = "Loading...";
+            document.getElementById('proxy-status').style.color = "#ffcc00";
+
+            let targetUrl = input;
+
+            // Check if it's a search or a URL
+            if (!targetUrl.includes('.') || targetUrl.includes(' ')) {
+                targetUrl = 'https://www.google.com/search?q=' + encodeURIComponent(targetUrl);
+            } else {
+                if (!targetUrl.startsWith('http')) {
+                    targetUrl = 'https://' + targetUrl;
+                }
+            }
+
+            const frame = document.getElementById('proxy-frame');
+            
+            // Standard Ultraviolet Base64 encoding
+            const encodedUrl = btoa(targetUrl);
+            
+            // Setting the frame source
+            frame.src = PROXY_BASE + encodedUrl;
+
+            frame.onload = () => {
+                document.getElementById('proxy-status').innerText = "Connected";
+                document.getElementById('proxy-status').style.color = "#00ff00";
+            };
+        }
+
+        // Enter key support
+        document.getElementById('url-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') launch();
+        });
+    </script>
 </body>
 </html>
