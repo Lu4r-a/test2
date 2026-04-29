@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chicken Proxy</title>
+    <style>
+        body { background-color: #121212; color: white; font-family: sans-serif; text-align: center; padding: 50px; }
+        .proxy-container { max-width: 600px; margin: 0 auto; background: #1e1e1e; padding: 30px; border-radius: 15px; border: 2px solid #ffcc00; }
+        input { width: 80%; padding: 12px; border-radius: 5px; border: none; margin-bottom: 20px; font-size: 16px; }
+        .btn { background: #ffcc00; color: black; padding: 12px 25px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; text-decoration: none; }
+        .warning { color: #ff4d4d; font-size: 12px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="proxy-container">
+        <h1 style="color: #ffcc00;">Web Proxy</h1>
+        <p>Enter a URL to browse freely:</p>
+        
+        <input type="text" id="proxy-url" placeholder="https://google.com">
+        <br>
+        <button class="btn" onclick="launchProxy()">Launch Proxy</button>
+        
+        <p class="warning">Note: Full proxies require a backend server like Ultraviolet or Womginx.</p>
+        <br>
+        <a href="index.html" style="color: #bbb; text-decoration: none;">← Back to Games</a>
+    </div>
+
+    <script>
+        function launchProxy() {
+            const url = document.getElementById('proxy-url').value;
+            if (!url) return alert("Please enter a URL");
+            
+            // This is where you'd link to your hosted proxy instance
+            // For example, if you deploy a proxy to Replit or Heroku:
+            // window.location.href = "https://your-proxy-server.com/main/" + url;
+            
+            alert("To make this work, you need to host a proxy server (like Ultraviolet) on a platform like Replit or a VPS!");
+        }
+    </script>
+</body>
+</html>
