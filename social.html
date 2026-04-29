@@ -89,34 +89,31 @@
     }
 
    async function loadUsers() {
-    // 1. Get all the data
+    // Fetch fresh data every time this runs
     const { data: allUsers } = await sb.from('profiles').select('*');
     const { data: myFriends } = await sb.from('friends').select('*').or(`user_id.eq.${myId},friend_id.eq.${myId}`);
     
     const list = document.getElementById('friends-list');
-    const countDisplay = document.getElementById('online-count');
+    const countDisplay = document.getElementById('online-count'); // This updates your social page counter
     list.innerHTML = "";
     
     let onlineTotal = 0;
-    const now = new Date();
+    const now = Date.now();
 
     allUsers.forEach(u => {
-        // --- STEP 1: CALCULATE ONLINE STATUS FIRST ---
-        // We do this for EVERYONE, regardless of friend status
-        const lastSeenDate = new Date(u.last_seen);
-        const diffInSeconds = Math.abs((now - lastSeenDate) / 1000);
-        const isRecent = diffInSeconds < 50; // 50 second window
-
+        // --- LOGIC 1: IS THIS PERSON ONLINE? ---
+        const lastSeen = new Date(u.last_seen).getTime();
+        const isRecent = Math.abs(now - lastSeen) < 90000; // 90 second window
+        
         if (isRecent) onlineTotal++;
-        if (u.id === myId) return; // Don't show yourself in the list
+        if (u.id === myId) return;
 
-        // --- STEP 2: FIGURE OUT DOT COLOR ---
+        // Determine Dot Style
         let dotClass = isRecent ? (u.status === 'idle' ? 'idle-dot' : 'online-dot') : 'offline-dot';
         let statusLabel = isRecent ? (u.status === 'idle' ? 'Idle' : 'Online') : 'Offline';
 
-        // --- STEP 3: FIGURE OUT FRIEND BUTTON ---
-        const friendsList = myFriends || [];
-        const friendship = friendsList.find(f => f.user_id === u.id || f.friend_id === u.id);
+        // --- LOGIC 2: WHAT BUTTON DO WE SHOW? ---
+        const friendship = (myFriends || []).find(f => f.user_id === u.id || f.friend_id === u.id);
         const isAccepted = friendship && friendship.status === 'accepted';
         const isPending = friendship && friendship.status === 'pending';
 
@@ -125,12 +122,28 @@
         if (isAccepted) {
             actionButton = `<button class="btn" onclick="startChat('${u.id}', '${u.username}')">Chat</button>`;
         } else if (isPending) {
-            if (friendship.friend_id === myId) {
-                actionButton = `<button class="btn" onclick="acceptFriend('${friendship.id}')" style="background:white; color:black;">Accept</button>`;
-            } else {
-                actionButton = `<span style="color:gray; font-size:12px; border:1px solid #444; padding:5px; border-radius:5px;">Pending...</span>`;
-            }
+            actionButton = friendship.friend_id === myId ? 
+                `<button class="btn" onclick="acceptFriend('${friendship.id}')" style="background:white; color:black;">Accept</button>` : 
+                `<span style="color:gray; font-size:12px; border:1px solid #444; padding:5px; border-radius:5px;">Pending...</span>`;
         }
+
+        // --- LOGIC 3: RENDER ---
+        list.innerHTML += `
+            <div class="user-row">
+                <span>
+                    <span class="dot ${dotClass}"></span>
+                    <strong>${u.username}</strong>
+                    <span class="status-text">${statusLabel}</span>
+                </span>
+                ${actionButton}
+            </div>`;
+    });
+
+    if (countDisplay) countDisplay.innerText = onlineTotal;
+    // Also update the global counter if you have one at the top of social.html
+    const globalCount = document.getElementById('global-online-count');
+    if (globalCount) globalCount.innerText = onlineTotal;
+}
 
         // --- STEP 4: DRAW THE ROW ---
         list.innerHTML += `
