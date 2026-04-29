@@ -280,51 +280,36 @@ document.head.append(style);
     const index_sb = supabase.createClient(INDEX_SB_URL, INDEX_SB_KEY);
 
     async function updateGlobalCount() {
-        try {
-            // Fetch all last_seen timestamps
-            const { data, error } = await index_sb.from('profiles').select('last_seen');
-            if (error) return;
+        const { data } = await index_sb.from('profiles').select('last_seen');
+        if (!data) return;
 
-            const now = new Date();
-            let online = 0;
+        const now = Date.now();
+        let online = 0;
 
-            data.forEach(u => {
-                if (!u.last_seen) return;
-                const lastSeenDate = new Date(u.last_seen);
-                // Calculate difference in seconds
-                const diff = Math.abs((now - lastSeenDate) / 1000);
-                
-                // If they were active in the last 60 seconds, they are online
-                if (diff < 60) online++;
-            });
+        data.forEach(u => {
+            if (!u.last_seen) return;
+            const lastSeen = new Date(u.last_seen).getTime();
+            // Window increased to 90 seconds to account for slow connections
+            if (Math.abs(now - lastSeen) < 90000) online++;
+        });
 
-            const display = document.getElementById('global-online-count');
-            if (display) display.innerText = online;
-        } catch (err) { console.log("Counter error:", err); }
+        const display = document.getElementById('global-online-count');
+        if (display) display.innerText = online;
     }
 
     async function indexHeartbeat() {
         const savedId = localStorage.getItem('chicken-id');
         const savedName = localStorage.getItem('chicken-username');
-        
-        // If the user hasn't logged in on social.html yet, we don't track them
-        if (!savedId || !savedName) return;
-
-        // This update tells the database you are active on the home page
-        await index_sb.from('profiles').upsert({ 
-            id: savedId, 
-            username: savedName, 
-            last_seen: new Date().toISOString(), 
-            status: 'online' 
-        });
+        if (savedId && savedName) {
+            await index_sb.from('profiles').upsert({ 
+                id: savedId, username: savedName, 
+                last_seen: new Date().toISOString(), status: 'online' 
+            });
+        }
     }
 
-    // Refresh count every 5 seconds
     setInterval(updateGlobalCount, 5000);
-    // Tell DB we are here every 10 seconds
     setInterval(indexHeartbeat, 10000);
-
-    // Run immediately
     updateGlobalCount();
     indexHeartbeat();
 </script>
