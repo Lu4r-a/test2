@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Chicken Proxy | Final Fix</title>
+    <title>Chicken Proxy | Final Pro Fix</title>
     <style>
         body { margin: 0; background: #121212; color: white; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         header { padding: 12px 20px; background: #1e1e1e; display: flex; gap: 10px; align-items: center; border-bottom: 2px solid #ffcc00; }
@@ -16,7 +16,7 @@
 
     <header>
         <button class="btn" onclick="location.href='index.html'">Back</button>
-        <input type="text" id="url-input" placeholder="Enter URL or search...">
+        <input type="text" id="url-input" placeholder="Search Google or enter a URL (e.g. youtube.com)">
         <button class="btn" onclick="launch()">Launch</button>
     </header>
 
@@ -25,7 +25,6 @@
     </div>
 
     <script>
-        // Use your actual worker link
         const WORKER_URL = "https://chicken-proxy.chickenmonkey278.workers.dev"; 
 
         function launch() {
@@ -33,15 +32,16 @@
             if (!val) return;
 
             let target;
-            // Search vs URL logic
+            // Decide if we are searching or navigating
             if (!val.includes('.') || val.includes(' ')) {
                 target = 'https://www.google.com/search?q=' + encodeURIComponent(val);
             } else {
                 target = val.startsWith('http') ? val : 'https://' + val;
             }
 
-            // Direct path method: WorkerURL/TargetURL
-            document.getElementById('proxy-frame').src = `${WORKER_URL}/${target}`;
+            // Encode the URL into Base64 so it travels safely to the Worker
+            const encodedUrl = btoa(target);
+            document.getElementById('proxy-frame').src = `${WORKER_URL}/${encodedUrl}`;
         }
 
         document.getElementById('url-input').addEventListener('keypress', (e) => {
