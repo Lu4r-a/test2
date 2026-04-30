@@ -84,46 +84,25 @@
         <span>Chicken Proxy v2.0 | Cloudflare Backend</span>
     </div>
 
-    <script>
-        // Your specific Cloudflare Worker URL
-        const WORKER_URL = "https://chicken-proxy.chickenmonkey278.workers.dev"; 
+   <script>
+    // This is a public community-hosted "Ultimate" proxy link
+    const ULTRAVIOLET_LINK = "https://uv.asura.pro/main/"; 
 
-        function launch() {
-            let input = document.getElementById('url-input').value.trim();
-            if (!input) return;
+    function launch() {
+        let input = document.getElementById('url-input').value.trim();
+        if (!input) return;
 
-            const status = document.getElementById('connection-status');
-            status.innerText = "Connecting...";
-            status.style.color = "#ffcc00";
-
-            let targetUrl = input;
-
-            // 1. Logic: Search vs Direct URL
-            if (!targetUrl.includes('.') || targetUrl.includes(' ')) {
-                targetUrl = 'https://www.google.com/search?q=' + encodeURIComponent(targetUrl);
-            } else {
-                if (!targetUrl.startsWith('http')) {
-                    targetUrl = 'https://' + targetUrl;
-                }
-            }
-
-            const frame = document.getElementById('proxy-frame');
-
-            /** * THE FIX: We use a template literal to ensure the URL is formed correctly.
-             * This sends the request as: https://your-worker.dev/?url=https://site.com
-             */
-            frame.src = `${WORKER_URL}/?url=${encodeURIComponent(targetUrl)}`;
-
-            frame.onload = () => {
-                status.innerText = "Connected";
-                status.style.color = "#00ff00";
-            };
+        let targetUrl = input;
+        if (!targetUrl.includes('.') || targetUrl.includes(' ')) {
+            targetUrl = 'https://www.google.com/search?q=' + encodeURIComponent(targetUrl);
+        } else if (!targetUrl.startsWith('http')) {
+            targetUrl = 'https://' + targetUrl;
         }
 
-        // Enter key listener
-        document.getElementById('url-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') launch();
-        });
-    </script>
+        const frame = document.getElementById('proxy-frame');
+        // Encodes the URL the way professional proxies expect
+        frame.src = ULTRAVIOLET_LINK + btoa(targetUrl);
+    }
+</script>
 </body>
 </html>
