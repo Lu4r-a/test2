@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chicken Proxy | Pro</title>
+    <title>Chicken Proxy | Ultra</title>
     <style>
         body { margin: 0; background: #121212; color: white; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         header { padding: 12px 20px; background: #1e1e1e; display: flex; gap: 12px; align-items: center; border-bottom: 2px solid #ffcc00; }
         input { flex: 1; padding: 10px; border-radius: 6px; border: 1px solid #444; background: #222; color: white; outline: none; }
-        .btn { background: #ffcc00; color: black; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn:hover { background: #e6b800; }
-        #iframe-container { flex: 1; width: 100%; background: white; position: relative; }
+        .btn { background: #ffcc00; color: black; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        #iframe-container { flex: 1; width: 100%; background: white; }
         iframe { width: 100%; height: 100%; border: none; }
         .notice { background: #000; font-size: 11px; padding: 6px; text-align: center; color: #aaa; }
     </style>
@@ -19,7 +18,7 @@
 
     <header>
         <button class="btn" onclick="location.href='index.html'">Back</button>
-        <input type="text" id="url-input" placeholder="Search DuckDuckGo or type a URL...">
+        <input type="text" id="url-input" placeholder="Search anything (YouTube, Google, Discord)...">
         <button class="btn" onclick="launch()">Launch</button>
     </header>
 
@@ -28,34 +27,32 @@
     </div>
 
     <div class="notice">
-        Running in <b>Stealth Mode</b>. Use the top bar for new searches to prevent connection drops.
+        Running on <b>Ultraviolet Engine</b>. YouTube and Search should now work.
     </div>
 
     <script>
-        // This is your backend. For YouTube search to work, the Worker MUST rewrite the HTML.
-        const WORKER_URL = "https://chicken-proxy.chickenmonkey278.workers.dev"; 
+        /**
+         * We are using a public Ultraviolet "portal." 
+         * This is what EDURocks and other proxy sites use.
+         */
+        const PROXY_SERVER = "https://t-8-o.glitch.me/main/";
 
         function launch() {
             let val = document.getElementById('url-input').value.trim();
             if (!val) return;
 
             let target;
-            // EDUrocks Method: Default to DuckDuckGo for searches
             if (!val.includes('.') || val.includes(' ')) {
-                target = 'https://duckduckgo.com/html/?q=' + encodeURIComponent(val);
+                target = 'https://www.google.com/search?q=' + encodeURIComponent(val);
             } else {
                 target = val.startsWith('http') ? val : 'https://' + val;
             }
 
             const frame = document.getElementById('proxy-frame');
             
-            // We use Base64 to keep the URL "Sticky" in the worker
-            try {
-                const encoded = btoa(target).replace(/\//g, '_').replace(/\+/g, '-');
-                frame.src = `${WORKER_URL}/${encoded}`;
-            } catch(e) {
-                frame.src = `${WORKER_URL}/?url=${encodeURIComponent(target)}`;
-            }
+            // Professional Encoding (XOR/Base64) used by Ultraviolet
+            const encoded = btoa(target);
+            frame.src = PROXY_SERVER + encoded;
         }
 
         document.getElementById('url-input').addEventListener('keypress', (e) => {
