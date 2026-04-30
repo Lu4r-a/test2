@@ -5,81 +5,117 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chicken Proxy</title>
     <style>
-        body { margin: 0; background: #121212; color: white; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        header { padding: 15px 25px; background: #1e1e1e; display: flex; gap: 15px; align-items: center; border-bottom: 2px solid #ffcc00; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        input { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #333; color: white; font-size: 16px; outline: none; transition: 0.3s; }
-        input:focus { border-color: #ffcc00; box-shadow: 0 0 8px #ffcc00; }
-        .btn { background: #ffcc00; color: black; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; text-decoration: none; transition: 0.2s; }
-        .btn:hover { background: #e6b800; transform: scale(1.05); }
-        #proxy-frame { flex: 1; border: none; width: 100%; background: white; }
-        .status-bar { background: #1e1e1e; padding: 5px 20px; font-size: 12px; color: #888; border-top: 1px solid #333; }
+        body { 
+            margin: 0; 
+            background: #121212; 
+            color: white; 
+            font-family: 'Segoe UI', sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh; 
+            overflow: hidden; 
+        }
+        header { 
+            padding: 15px 25px; 
+            background: #1e1e1e; 
+            display: flex; 
+            gap: 15px; 
+            align-items: center; 
+            border-bottom: 2px solid #ffcc00; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        input { 
+            flex: 1; 
+            padding: 12px; 
+            border-radius: 8px; 
+            border: 1px solid #444; 
+            background: #333; 
+            color: white; 
+            font-size: 16px; 
+            outline: none; 
+        }
+        .btn { 
+            background: #ffcc00; 
+            color: black; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 8px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            text-decoration: none; 
+        }
+        .btn:hover { background: #e6b800; }
+        
+        /* This container holds the iframe */
+        #iframe-container {
+            flex: 1;
+            width: 100%;
+            background: white;
+            position: relative;
+        }
+        iframe { 
+            width: 100%; 
+            height: 100%; 
+            border: none; 
+        }
+        .info-bar {
+            background: #1e1e1e;
+            padding: 5px 20px;
+            font-size: 11px;
+            color: #888;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
 
     <header>
         <a href="index.html" class="btn">← Back</a>
-        <input type="text" id="url-input" placeholder="Enter URL or search Google...">
+        <input type="text" id="url-input" placeholder="Enter URL (e.g., discord.com) or search...">
         <button class="btn" onclick="launch()">Launch</button>
     </header>
 
-    <iframe id="proxy-frame" src="about:blank"></iframe>
+    <div id="iframe-container">
+        <iframe id="proxy-frame" src="about:blank"></iframe>
+    </div>
 
-    <div class="status-bar">
-        Status: <span id="proxy-status" style="color: #00ff00;">Ready</span> | Powered by Ultraviolet Engine
+    <div class="info-bar">
+        Note: Using Google Engine. Some heavy apps (Discord/YouTube) may have layout issues.
     </div>
 
     <script>
-    // This is a common public Ultraviolet gateway. 
-    // If this stops working, you'll need to find a new "Public Ultraviolet Instance".
-    const GATEWAY = "https://uv.student-portal.cloud/main/"; 
+        function launch() {
+            let input = document.getElementById('url-input').value.trim();
+            if (!input) return;
 
-    function launch() {
-        let input = document.getElementById('url-input').value.trim();
-        if (!input) return;
+            let targetUrl = input;
 
-        let targetUrl = input;
-
-        // 1. If it doesn't have a dot or has spaces, it's a Google Search
-        if (!targetUrl.includes('.') || targetUrl.includes(' ')) {
-            targetUrl = 'https://www.google.com/search?q=' + encodeURIComponent(targetUrl);
-        } else {
-            // 2. Ensure it starts with https://
-            if (!targetUrl.startsWith('http')) {
-                targetUrl = 'https://' + targetUrl;
+            // 1. If it's a search term, send to Google Search
+            if (!targetUrl.includes('.') || targetUrl.includes(' ')) {
+                targetUrl = 'https://www.google.com/search?q=' + encodeURIComponent(targetUrl);
+            } else {
+                // 2. Ensure it has a protocol
+                if (!targetUrl.startsWith('http')) {
+                    targetUrl = 'https://' + targetUrl;
+                }
             }
+
+            const frame = document.getElementById('proxy-frame');
+
+            /* The Google Translate Proxy Trick:
+               sl = source language (auto)
+               tl = target language (en)
+               u = the URL to fetch
+            */
+            const proxyUrl = "https://translate.google.com/translate?sl=auto&tl=en&u=" + encodeURIComponent(targetUrl);
+            
+            frame.src = proxyUrl;
         }
 
-        // 3. For many public mirrors, we need to encode the URL in Base64
-        // This is what actually tells the proxy where to go.
-        const encodedUrl = btoa(targetUrl);
-        
-        const frame = document.getElementById('proxy-frame');
-        const status = document.getElementById('proxy-status');
-
-        status.innerText = "Connecting...";
-        status.style.color = "#ffcc00";
-
-        // Construct the final URL
-        frame.src = GATEWAY + encodedUrl;
-
-        frame.onload = () => {
-            status.innerText = "Connected";
-            status.style.color = "#00ff00";
-        };
-
-        // Error fallback: If the frame stays blank or errors out
-        setTimeout(() => {
-            if (status.innerText === "Connecting...") {
-                status.innerText = "Error: Gateway Blocked or Offline";
-                status.style.color = "#ff4d4d";
-            }
-        }, 8000);
-    }
-
-    document.getElementById('url-input').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') launch();
-    });
-</script>
+        // Support for Enter Key
+        document.getElementById('url-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') launch();
+        });
+    </script>
 </body>
 </html>
