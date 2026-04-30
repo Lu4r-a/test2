@@ -33,6 +33,11 @@
             color: white; 
             font-size: 16px; 
             outline: none; 
+            transition: 0.2s;
+        }
+        input:focus {
+            border-color: #ffcc00;
+            box-shadow: 0 0 8px rgba(255, 204, 0, 0.4);
         }
         .btn { 
             background: #ffcc00; 
@@ -43,14 +48,17 @@
             font-weight: bold; 
             cursor: pointer; 
             text-decoration: none; 
+            transition: 0.2s;
         }
-        .btn:hover { background: #e6b800; }
+        .btn:hover { 
+            background: #e6b800; 
+            transform: translateY(-1px);
+        }
         
-        /* This container holds the iframe */
         #iframe-container {
             flex: 1;
             width: 100%;
-            background: white;
+            background: #fff;
             position: relative;
         }
         iframe { 
@@ -58,12 +66,14 @@
             height: 100%; 
             border: none; 
         }
-        .info-bar {
+        .status-bar {
             background: #1e1e1e;
             padding: 5px 20px;
             font-size: 11px;
             color: #888;
-            text-align: center;
+            border-top: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
         }
     </style>
 </head>
@@ -71,7 +81,7 @@
 
     <header>
         <a href="index.html" class="btn">← Back</a>
-        <input type="text" id="url-input" placeholder="Enter URL (e.g., discord.com) or search...">
+        <input type="text" id="url-input" placeholder="Enter URL or search anything...">
         <button class="btn" onclick="launch()">Launch</button>
     </header>
 
@@ -79,22 +89,33 @@
         <iframe id="proxy-frame" src="about:blank"></iframe>
     </div>
 
-    <div class="info-bar">
-        Note: Using Google Engine. Some heavy apps (Discord/YouTube) may have layout issues.
+    <div class="status-bar">
+        <span>Backend: <strong id="connection-status" style="color: #ff4d4d;">Disconnected</strong></span>
+        <span>Powered by Private Cloudflare Worker</span>
     </div>
 
     <script>
+        /**
+         * 1. PASTE YOUR CLOUDFLARE WORKER URL BELOW
+         * It should look like: https://chicken-proxy.yourname.workers.dev/
+         */
+        const WORKER_URL = "chicken-proxy.chickenmonkey278.workers.dev"; 
+
         function launch() {
             let input = document.getElementById('url-input').value.trim();
             if (!input) return;
 
+            // Update UI status
+            const status = document.getElementById('connection-status');
+            status.innerText = "Connecting...";
+            status.style.color = "#ffcc00";
+
             let targetUrl = input;
 
-            // 1. If it's a search term, send to Google Search
+            // Handle Search vs URL logic
             if (!targetUrl.includes('.') || targetUrl.includes(' ')) {
                 targetUrl = 'https://www.google.com/search?q=' + encodeURIComponent(targetUrl);
             } else {
-                // 2. Ensure it has a protocol
                 if (!targetUrl.startsWith('http')) {
                     targetUrl = 'https://' + targetUrl;
                 }
@@ -102,17 +123,21 @@
 
             const frame = document.getElementById('proxy-frame');
 
-            /* The Google Translate Proxy Trick:
-               sl = source language (auto)
-               tl = target language (en)
-               u = the URL to fetch
-            */
-            const proxyUrl = "https://translate.google.com/translate?sl=auto&tl=en&u=" + encodeURIComponent(targetUrl);
+            /**
+             * We use a URL parameter (?url=) to tell your Worker 
+             * exactly which site to fetch and return to you.
+             */
+            const finalRequestUrl = WORKER_URL + "?url=" + encodeURIComponent(targetUrl);
             
-            frame.src = proxyUrl;
+            frame.src = finalRequestUrl;
+
+            frame.onload = () => {
+                status.innerText = "Connected";
+                status.style.color = "#00ff00";
+            };
         }
 
-        // Support for Enter Key
+        // Allow "Enter" key to trigger the search
         document.getElementById('url-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') launch();
         });
