@@ -30,45 +30,56 @@
     </div>
 
     <script>
-        // We use a public Ultraviolet instance that is currently active
-        const PROXY_BASE = "https://p.psidown.gq/main/"; 
+    // This is a common public Ultraviolet gateway. 
+    // If this stops working, you'll need to find a new "Public Ultraviolet Instance".
+    const GATEWAY = "https://uv.student-portal.cloud/main/"; 
 
-        function launch() {
-            let input = document.getElementById('url-input').value.trim();
-            if (!input) return;
+    function launch() {
+        let input = document.getElementById('url-input').value.trim();
+        if (!input) return;
 
-            document.getElementById('proxy-status').innerText = "Loading...";
-            document.getElementById('proxy-status').style.color = "#ffcc00";
+        let targetUrl = input;
 
-            let targetUrl = input;
-
-            // Check if it's a search or a URL
-            if (!targetUrl.includes('.') || targetUrl.includes(' ')) {
-                targetUrl = 'https://www.google.com/search?q=' + encodeURIComponent(targetUrl);
-            } else {
-                if (!targetUrl.startsWith('http')) {
-                    targetUrl = 'https://' + targetUrl;
-                }
+        // 1. If it doesn't have a dot or has spaces, it's a Google Search
+        if (!targetUrl.includes('.') || targetUrl.includes(' ')) {
+            targetUrl = 'https://www.google.com/search?q=' + encodeURIComponent(targetUrl);
+        } else {
+            // 2. Ensure it starts with https://
+            if (!targetUrl.startsWith('http')) {
+                targetUrl = 'https://' + targetUrl;
             }
-
-            const frame = document.getElementById('proxy-frame');
-            
-            // Standard Ultraviolet Base64 encoding
-            const encodedUrl = btoa(targetUrl);
-            
-            // Setting the frame source
-            frame.src = PROXY_BASE + encodedUrl;
-
-            frame.onload = () => {
-                document.getElementById('proxy-status').innerText = "Connected";
-                document.getElementById('proxy-status').style.color = "#00ff00";
-            };
         }
 
-        // Enter key support
-        document.getElementById('url-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') launch();
-        });
-    </script>
+        // 3. For many public mirrors, we need to encode the URL in Base64
+        // This is what actually tells the proxy where to go.
+        const encodedUrl = btoa(targetUrl);
+        
+        const frame = document.getElementById('proxy-frame');
+        const status = document.getElementById('proxy-status');
+
+        status.innerText = "Connecting...";
+        status.style.color = "#ffcc00";
+
+        // Construct the final URL
+        frame.src = GATEWAY + encodedUrl;
+
+        frame.onload = () => {
+            status.innerText = "Connected";
+            status.style.color = "#00ff00";
+        };
+
+        // Error fallback: If the frame stays blank or errors out
+        setTimeout(() => {
+            if (status.innerText === "Connecting...") {
+                status.innerText = "Error: Gateway Blocked or Offline";
+                status.style.color = "#ff4d4d";
+            }
+        }, 8000);
+    }
+
+    document.getElementById('url-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') launch();
+    });
+</script>
 </body>
 </html>
