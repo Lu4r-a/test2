@@ -5,73 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chicken Proxy</title>
     <style>
-        body { 
-            margin: 0; 
-            background: #121212; 
-            color: white; 
-            font-family: 'Segoe UI', sans-serif; 
-            display: flex; 
-            flex-direction: column; 
-            height: 100vh; 
-            overflow: hidden; 
-        }
-        header { 
-            padding: 15px 25px; 
-            background: #1e1e1e; 
-            display: flex; 
-            gap: 15px; 
-            align-items: center; 
-            border-bottom: 2px solid #ffcc00; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
-        input { 
-            flex: 1; 
-            padding: 12px; 
-            border-radius: 8px; 
-            border: 1px solid #444; 
-            background: #333; 
-            color: white; 
-            font-size: 16px; 
-            outline: none; 
-        }
-        .btn { 
-            background: #ffcc00; 
-            color: black; 
-            border: none; 
-            padding: 10px 20px; 
-            border-radius: 8px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            text-decoration: none; 
-        }
-        .btn:hover { background: #e6b800; }
-        
-        #iframe-container {
-            flex: 1;
-            width: 100%;
-            background: white;
-        }
-        iframe { 
-            width: 100%; 
-            height: 100%; 
-            border: none; 
-        }
-        .status-bar {
-            background: #1e1e1e;
-            padding: 5px 20px;
-            font-size: 11px;
-            color: #888;
-            border-top: 1px solid #333;
-            display: flex;
-            justify-content: space-between;
-        }
+        body { margin: 0; background: #121212; color: white; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        header { padding: 15px 25px; background: #1e1e1e; display: flex; gap: 15px; align-items: center; border-bottom: 2px solid #ffcc00; }
+        input { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #333; color: white; font-size: 16px; outline: none; }
+        .btn { background: #ffcc00; color: black; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; text-decoration: none; }
+        #iframe-container { flex: 1; width: 100%; background: white; }
+        iframe { width: 100%; height: 100%; border: none; }
+        .footer { background: #1e1e1e; padding: 5px 20px; font-size: 11px; color: #888; border-top: 1px solid #333; text-align: center; }
     </style>
 </head>
 <body>
 
     <header>
         <a href="index.html" class="btn">← Back</a>
-        <input type="text" id="url-input" placeholder="Search Google or type a URL (e.g. discord.com)">
+        <input type="text" id="url-input" placeholder="Enter URL or search (e.g., youtube.com)">
         <button class="btn" onclick="launch()">Launch</button>
     </header>
 
@@ -79,48 +26,36 @@
         <iframe id="proxy-frame" src="about:blank"></iframe>
     </div>
 
-    <div class="status-bar">
-        <span>Status: <strong id="connection-status" style="color: #888;">Ready</strong></span>
-        <span>Chicken Proxy v2.0 | Cloudflare Backend</span>
+    <div class="footer">
+        Status: <span id="status" style="color: #00ff00;">Ready</span> | Backend: Cloudflare Worker
     </div>
 
     <script>
-        // Your specific Cloudflare Worker URL
+        // REPLACE with your actual Worker URL
         const WORKER_URL = "https://chicken-proxy.chickenmonkey278.workers.dev"; 
 
         function launch() {
-            let input = document.getElementById('url-input').value.trim();
-            if (!input) return;
+            let val = document.getElementById('url-input').value.trim();
+            if (!val) return;
 
-            const status = document.getElementById('connection-status');
-            status.innerText = "Connecting...";
-            status.style.color = "#ffcc00";
-
-            let targetUrl = input;
-
-            // 1. Logic: Search vs Direct URL
-            if (!targetUrl.includes('.') || targetUrl.includes(' ')) {
-                targetUrl = 'https://www.google.com/search?q=' + encodeURIComponent(targetUrl);
+            document.getElementById('status').innerText = "Loading...";
+            
+            let target;
+            if (!val.includes('.') || val.includes(' ')) {
+                target = 'https://www.google.com/search?q=' + encodeURIComponent(val);
             } else {
-                if (!targetUrl.startsWith('http')) {
-                    targetUrl = 'https://' + targetUrl;
-                }
+                target = val.startsWith('http') ? val : 'https://' + val;
             }
 
-            const frame = document.getElementById('proxy-frame');
+            // Encapsulate the URL for the Worker
+            const finalUrl = `${WORKER_URL}/?url=${encodeURIComponent(target)}`;
+            document.getElementById('proxy-frame').src = finalUrl;
 
-            /** * THE FIX: We use a template literal to ensure the URL is formed correctly.
-             * This sends the request as: https://your-worker.dev/?url=https://site.com
-             */
-            frame.src = `${WORKER_URL}/?url=${encodeURIComponent(targetUrl)}`;
-
-            frame.onload = () => {
-                status.innerText = "Connected";
-                status.style.color = "#00ff00";
+            document.getElementById('proxy-frame').onload = () => {
+                document.getElementById('status').innerText = "Connected";
             };
         }
 
-        // Enter key listener
         document.getElementById('url-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') launch();
         });
