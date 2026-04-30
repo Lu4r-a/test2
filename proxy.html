@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Chicken Proxy | Final</title>
+    <title>Chicken Proxy | Final Fix</title>
     <style>
         body { margin: 0; background: #121212; color: white; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        header { padding: 10px 20px; background: #1e1e1e; display: flex; gap: 10px; align-items: center; border-bottom: 2px solid #ffcc00; }
+        header { padding: 12px 20px; background: #1e1e1e; display: flex; gap: 10px; align-items: center; border-bottom: 2px solid #ffcc00; }
         input { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #333; color: white; font-size: 16px; outline: none; }
         .btn { background: #ffcc00; color: black; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         #iframe-container { flex: 1; width: 100%; background: white; }
@@ -16,7 +16,7 @@
 
     <header>
         <button class="btn" onclick="location.href='index.html'">Back</button>
-        <input type="text" id="url-input" placeholder="Search Google/YouTube or enter a URL...">
+        <input type="text" id="url-input" placeholder="Enter URL or search...">
         <button class="btn" onclick="launch()">Launch</button>
     </header>
 
@@ -25,6 +25,7 @@
     </div>
 
     <script>
+        // Use your actual worker link
         const WORKER_URL = "https://chicken-proxy.chickenmonkey278.workers.dev"; 
 
         function launch() {
@@ -32,16 +33,15 @@
             if (!val) return;
 
             let target;
+            // Search vs URL logic
             if (!val.includes('.') || val.includes(' ')) {
                 target = 'https://www.google.com/search?q=' + encodeURIComponent(val);
             } else {
                 target = val.startsWith('http') ? val : 'https://' + val;
             }
 
-            // XOR Scrambler: Matches the Worker's decoding
-            const scrambled = btoa(target.split('').map((char, ind) => ind % 2 ? char : String.fromCharCode(char.charCodeAt(0) ^ 2)).join(''));
-            
-            document.getElementById('proxy-frame').src = `${WORKER_URL}/${scrambled}`;
+            // Direct path method: WorkerURL/TargetURL
+            document.getElementById('proxy-frame').src = `${WORKER_URL}/${target}`;
         }
 
         document.getElementById('url-input').addEventListener('keypress', (e) => {
