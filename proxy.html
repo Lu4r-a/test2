@@ -33,11 +33,6 @@
             color: white; 
             font-size: 16px; 
             outline: none; 
-            transition: 0.2s;
-        }
-        input:focus {
-            border-color: #ffcc00;
-            box-shadow: 0 0 8px rgba(255, 204, 0, 0.4);
         }
         .btn { 
             background: #ffcc00; 
@@ -48,18 +43,13 @@
             font-weight: bold; 
             cursor: pointer; 
             text-decoration: none; 
-            transition: 0.2s;
         }
-        .btn:hover { 
-            background: #e6b800; 
-            transform: translateY(-1px);
-        }
+        .btn:hover { background: #e6b800; }
         
         #iframe-container {
             flex: 1;
             width: 100%;
-            background: #fff;
-            position: relative;
+            background: white;
         }
         iframe { 
             width: 100%; 
@@ -81,7 +71,7 @@
 
     <header>
         <a href="index.html" class="btn">← Back</a>
-        <input type="text" id="url-input" placeholder="Enter URL or search anything...">
+        <input type="text" id="url-input" placeholder="Search Google or type a URL (e.g. discord.com)">
         <button class="btn" onclick="launch()">Launch</button>
     </header>
 
@@ -90,29 +80,25 @@
     </div>
 
     <div class="status-bar">
-        <span>Backend: <strong id="connection-status" style="color: #ff4d4d;">Disconnected</strong></span>
-        <span>Powered by Private Cloudflare Worker</span>
+        <span>Status: <strong id="connection-status" style="color: #888;">Ready</strong></span>
+        <span>Chicken Proxy v2.0 | Cloudflare Backend</span>
     </div>
 
     <script>
-        /**
-         * 1. PASTE YOUR CLOUDFLARE WORKER URL BELOW
-         * It should look like: https://chicken-proxy.yourname.workers.dev/
-         */
-        const WORKER_URL = "chicken-proxy.chickenmonkey278.workers.dev"; 
+        // Your specific Cloudflare Worker URL
+        const WORKER_URL = "https://chicken-proxy.chickenmonkey278.workers.dev"; 
 
         function launch() {
             let input = document.getElementById('url-input').value.trim();
             if (!input) return;
 
-            // Update UI status
             const status = document.getElementById('connection-status');
             status.innerText = "Connecting...";
             status.style.color = "#ffcc00";
 
             let targetUrl = input;
 
-            // Handle Search vs URL logic
+            // 1. Logic: Search vs Direct URL
             if (!targetUrl.includes('.') || targetUrl.includes(' ')) {
                 targetUrl = 'https://www.google.com/search?q=' + encodeURIComponent(targetUrl);
             } else {
@@ -123,13 +109,10 @@
 
             const frame = document.getElementById('proxy-frame');
 
-            /**
-             * We use a URL parameter (?url=) to tell your Worker 
-             * exactly which site to fetch and return to you.
+            /** * THE FIX: We use a template literal to ensure the URL is formed correctly.
+             * This sends the request as: https://your-worker.dev/?url=https://site.com
              */
-            const finalRequestUrl = WORKER_URL + "?url=" + encodeURIComponent(targetUrl);
-            
-            frame.src = finalRequestUrl;
+            frame.src = `${WORKER_URL}/?url=${encodeURIComponent(targetUrl)}`;
 
             frame.onload = () => {
                 status.innerText = "Connected";
@@ -137,7 +120,7 @@
             };
         }
 
-        // Allow "Enter" key to trigger the search
+        // Enter key listener
         document.getElementById('url-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') launch();
         });
