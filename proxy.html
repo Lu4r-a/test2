@@ -5,20 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chicken Proxy</title>
     <style>
-        body { margin: 0; background: #121212; color: white; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        header { padding: 15px 25px; background: #1e1e1e; display: flex; gap: 15px; align-items: center; border-bottom: 2px solid #ffcc00; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        input { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #333; color: white; font-size: 16px; outline: none; }
-        .btn { background: #ffcc00; color: black; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; text-decoration: none; }
+        body { margin: 0; background: #121212; color: white; font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        header { padding: 10px 20px; background: #1e1e1e; display: flex; gap: 10px; align-items: center; border-bottom: 2px solid #ffcc00; }
+        input { flex: 1; padding: 10px; border-radius: 5px; border: 1px solid #444; background: #333; color: white; outline: none; }
+        .btn { background: #ffcc00; color: black; border: none; padding: 10px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; }
         #iframe-container { flex: 1; width: 100%; background: white; }
         iframe { width: 100%; height: 100%; border: none; }
-        .status-bar { background: #1e1e1e; padding: 5px 20px; font-size: 11px; color: #888; border-top: 1px solid #333; display: flex; justify-content: space-between; }
+        .info { background: #111; font-size: 10px; padding: 5px; text-align: center; color: #666; }
     </style>
 </head>
 <body>
 
     <header>
-        <a href="index.html" class="btn">← Back</a>
-        <input type="text" id="url-input" placeholder="Search Google or type a URL (e.g. discord.com)">
+        <button class="btn" onclick="location.href='index.html'">Back</button>
+        <input type="text" id="url-input" placeholder="Enter URL or Search Query...">
         <button class="btn" onclick="launch()">Launch</button>
     </header>
 
@@ -26,46 +26,35 @@
         <iframe id="proxy-frame" src="about:blank"></iframe>
     </div>
 
-    <div class="status-bar">
-        <span>Status: <strong id="connection-status" style="color: #888;">Ready</strong></span>
-        <span>Chicken Proxy | Private Cloudflare Backend</span>
+    <div class="info">
+        Tip: If searching INSIDE a site fails, type your search directly into the yellow bar above.
     </div>
 
     <script>
         const WORKER_URL = "https://chicken-proxy.chickenmonkey278.workers.dev"; 
 
         function launch() {
-            let input = document.getElementById('url-input').value.trim();
-            if (!input) return;
+            let val = document.getElementById('url-input').value.trim();
+            if (!val) return;
 
-            const status = document.getElementById('connection-status');
-            status.innerText = "Connecting...";
-            status.style.color = "#ffcc00";
-
-            let targetUrl = input;
-
-            // 1. Check if it's a search term or a URL
-            if (!targetUrl.includes('.') || targetUrl.includes(' ')) {
-                targetUrl = 'https://www.google.com/search?q=' + encodeURIComponent(targetUrl);
+            let target;
+            // 1. If it's not a URL, use DuckDuckGo (it's much easier to proxy than Google)
+            if (!val.includes('.') || val.includes(' ')) {
+                target = 'https://duckduckgo.com/?q=' + encodeURIComponent(val);
             } else {
-                if (!targetUrl.startsWith('http')) {
-                    targetUrl = 'https://' + targetUrl;
-                }
+                target = val.startsWith('http') ? val : 'https://' + val;
             }
 
             const frame = document.getElementById('proxy-frame');
-
-            // 2. ENCODE THE URL TO BASE64
-            // This prevents the "Enter a URL" error when clicking links
-            const encodedUrl = btoa(targetUrl);
             
-            // 3. Send it to the worker
-            frame.src = `${WORKER_URL}/${encodedUrl}`;
-
-            frame.onload = () => {
-                status.innerText = "Connected";
-                status.style.color = "#00ff00";
-            };
+            // 2. We use a simpler Base64 path that Cloudflare can easily parse
+            try {
+                const encoded = btoa(target);
+                frame.src = `${WORKER_URL}/${encoded}`;
+            } catch(e) {
+                // Fallback if URL contains weird characters
+                frame.src = `${WORKER_URL}/?url=${encodeURIComponent(target)}`;
+            }
         }
 
         document.getElementById('url-input').addEventListener('keypress', (e) => {
